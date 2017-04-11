@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3
 """
 Récupère les identifiants du père des individus présents dans le fichier de
 qualité d'œuf en utilisant le fichier de localisation des troupeaux.
@@ -36,7 +36,15 @@ def main(args):
         poids["Lot"] = poids.apply(define_lot, axis=1)
 
     print("Searching father ID")
-    result = pd.merge(poids, population[["Bird ID", "ID Père"]], how="left", on=["Bird ID"])
+    # Check if the correct type is used for the interest columns
+    poids["Bird ID"] = poids["Bird ID"].astype(str)
+
+    population["ID Père"] = population["ID Père"].astype(str)
+    population["Bird ID"] = population["Bird ID"].astype(str)
+
+    # Merge the "ID Père" column to the weight data
+    result = pd.merge(poids, population[["Bird ID", "ID Père"]], how="left",
+                      on=["Bird ID"])
 
     print("Writing result file")
     result.to_csv(args["--output"], index=False)
@@ -67,6 +75,13 @@ def define_lot(row):
     else:
         return -1
 
+def get_father_id(row, pop):
+    print("test")
+    result = pop.loc[pop["Bird ID"]==row["Bird ID"]]#["ID Père"]
+    if result.tolist() != []:
+        return result.tolist()[0]
+    else:
+        return -1
 
 ##########
 # LAUNCH #
