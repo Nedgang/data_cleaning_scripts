@@ -38,7 +38,7 @@ def main(args):
     data["Type_cage"] = data["Type_cage"].astype(str)
     dispo_cage["Type_cage"] = dispo_cage["Type_cage"].astype(str)
 
-    result = pd.merge(data, dispo_cage, how='left', on=["Cage", "Lot", "Type_cage"])
+    result = pd.merge(data, dispo_cage, how='inner', on=["Cage", "Lot", "Type_cage"])
     #print(result)
 
     print("Writing output: "+ args["--output"])
