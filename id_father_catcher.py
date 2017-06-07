@@ -4,7 +4,7 @@ Récupère les identifiants du père des individus présents dans le fichier de
 qualité d'œuf en utilisant le fichier de localisation des troupeaux.
 
 Usage:
-    ./id_father_catcher.py <egg_qual> <chicken_data> --output=<output_file>
+    ./id_father_catcher.py <egg_qual> <pedigree> --output=<output_file>
 
 Options:
     -h, --help              Show this screen.
@@ -28,7 +28,22 @@ from docopt import docopt
 def main(args):
     print("Loading files in RAM")
     egg_qual = pd.read_csv(args["<egg_qual>"])
-    population = pd.read_csv(args["<chicken_data>"])
+    population = pd.read_csv(args["<pedigree>"])
+
+    population["Ferme"] = population["Ferme"].astype(str)
+    egg_qual["Ferme"] = egg_qual["Ferme"].astype(str)
+
+    population["Batiment"] = population["Batiment"].astype(str)
+    egg_qual["Batiment"] = egg_qual["Batiment"].astype(str)
+
+    population["Cage"] = population["Cage"].astype(str)
+    egg_qual["Cage"] = egg_qual["Cage"].astype(str)
+
+    population["Cage"] = population.apply(clean_cage, axis=1)
+    egg_qual["Cage"]= egg_qual.apply(clean_cage, axis=1)
+
+    population["Lot"] = population["Lot"].astype(float)
+    egg_qual["Lot"] = egg_qual["Lot"].astype(float)
 
     # Check if the variable "lot" does exist.
     print("Clustering depending of the chicken birth (\"Lot\")")
@@ -40,16 +55,21 @@ def main(args):
 
     print("Searching father ID")
 
-    egg_qual["ID Père"] = egg_qual.apply(lambda x: get_father_id(x, population)
+    egg_qual["IDPere"] = egg_qual.apply(lambda x: get_father_id(x, population)
                                           , axis=1)
 
+    result = egg_qual[egg_qual["IDPere"] > 0]
+
     print("Writing result file")
-    egg_qual.to_csv(args["--output"], index=False)
+    result.to_csv(args["--output"], index=False)
 
 
 #############
 # FUNCTIONS #
 #############
+def clean_cage(row):
+    return row["Cage"].split(".")[0]
+
 def define_lot(row):
     if "Génération" in row:
         infos = row["Génération"].split("/")
@@ -75,24 +95,25 @@ def define_lot(row):
 def get_father_id(row, pop):
     # If ID column exist and is not empty
     if "Bird ID" in row and row["Bird ID"] != "":
-        result = pop.loc[pop["Bird ID"]==row["Bird ID"]]["ID Père"]
+        result = pop.loc[pop["Bird_ID"]==row["Bird ID"]]["ID_P"]
         if result.tolist() != []:
             return result.tolist()[0]
         else:
             return -1
     else:
         result = pop.loc[(pop["Ferme"] == row["Ferme"]) &
-                         (pop["Bâtiment"] == row["Bâtiment"]) &
+                         (pop["Batiment"] == row["Batiment"]) &
                          (pop["Cage"] == row["Cage"]) &
-                         (pop["Lot"] == row["Lot"])]["ID Père"]
-        if result.tolist() != []:
+                         (pop["Lot"] == row["Lot"])]["ID_P"]
+        # print(result.tolist())
+        if len(set(result.tolist())) == 1:
             return result.tolist()[0]
         elif row["Lot"] == "2013.3":
             result = pop.loc[(pop["Ferme"] == row["Ferme"]) &
-                         (pop["Bâtiment"] == row["Bâtiment"]) &
+                         (pop["Batiment"] == row["Batiment"]) &
                          (pop["Cage"] == row["Cage"]) &
-                         (pop["Lot"] == 2013.1)]["ID Père"]
-            if result.tolist() != []:
+                         (pop["Lot"] == 2013.1)]["ID_P"]
+            if len(set(result.tolist())) == 1:
                 return result.tolist()[0]
             else:
                 return -1
