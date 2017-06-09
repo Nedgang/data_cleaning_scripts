@@ -39,8 +39,8 @@ def main(args):
     dispo_cage["Type_cage"] = dispo_cage["Type_cage"].astype(str)
 
     result = pd.merge(data, dispo_cage, how='inner', on=["Cage", "Lot", "Type_cage"])
-    #print(result)
 
+    result = result.drop_duplicate()
     print("Writing output: "+ args["--output"])
     result.to_csv(args["--output"], index=False)
 
