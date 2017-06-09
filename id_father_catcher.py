@@ -59,7 +59,6 @@ def main(args):
                                           , axis=1)
 
     result = egg_qual[egg_qual["IDPere"] > 0]
-
     print("Writing result file")
     result.to_csv(args["--output"], index=False)
 
@@ -71,8 +70,8 @@ def clean_cage(row):
     return row["Cage"].split(".")[0]
 
 def define_lot(row):
-    if "Génération" in row:
-        infos = row["Génération"].split("/")
+    if "Generation" in row:
+        infos = row["Generation"].split("/")
         try:
             infos[1]=str(int(infos[1]))
             return ".".join(infos[0:2])
@@ -94,8 +93,8 @@ def define_lot(row):
 
 def get_father_id(row, pop):
     # If ID column exist and is not empty
-    if "Bird ID" in row and row["Bird ID"] != "":
-        result = pop.loc[pop["Bird_ID"]==row["Bird ID"]]["ID_P"]
+    if "BirdID" in row and row["BirdID"] != "":
+        result = pop.loc[pop["Bird_ID"]==row["BirdID"]]["ID_P"]
         if result.tolist() != []:
             return result.tolist()[0]
         else:
