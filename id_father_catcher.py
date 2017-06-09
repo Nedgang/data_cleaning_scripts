@@ -96,7 +96,10 @@ def get_father_id(row, pop):
     if "BirdID" in row and row["BirdID"] != "":
         result = pop.loc[pop["Bird_ID"]==row["BirdID"]]["ID_P"]
         if result.tolist() != []:
-            return result.tolist()[0]
+            if result.tolist()[0] == ".":
+                return -1
+            else:
+                return int(result.tolist()[0])
         else:
             return -1
     else:
