@@ -42,13 +42,10 @@ def main(args):
     population["Cage"] = population.apply(clean_cage, axis=1)
     egg_qual["Cage"]= egg_qual.apply(clean_cage, axis=1)
 
-    population["Lot"] = population["Lot"].astype(float)
-    egg_qual["Lot"] = egg_qual["Lot"].astype(float)
 
     # Check if the variable "lot" does exist.
     print("Clustering depending of the chicken birth (\"Lot\")")
-    if "Lot" not in egg_qual:
-        egg_qual["Lot"] = egg_qual.apply(define_lot, axis=1)
+    egg_qual["Lot"] = egg_qual.apply(define_lot, axis=1)
 
     if "Lot" not in population:
         population["Lot"] = population.apply(define_lot, axis=1)
@@ -58,9 +55,9 @@ def main(args):
     egg_qual["IDPere"] = egg_qual.apply(lambda x: get_father_id(x, population)
                                           , axis=1)
 
-    result = egg_qual[egg_qual["IDPere"] > 0]
+    egg_qual = egg_qual[egg_qual["IDPere"] > 0]
     print("Writing result file")
-    result.to_csv(args["--output"], index=False)
+    egg_qual.to_csv(args["--output"], index=False)
 
 
 #############
@@ -76,7 +73,7 @@ def define_lot(row):
             infos[1]=str(int(infos[1]))
             return ".".join(infos[0:2])
         except:
-            infos = row["Génération"].replace(",", ".")
+            infos = row["Generation"].replace(",", ".")
             return infos
 
     elif "Date d'éclosion" in row:
@@ -94,7 +91,7 @@ def define_lot(row):
 def get_father_id(row, pop):
     # If ID column exist and is not empty
     if "BirdID" in row and row["BirdID"] != "":
-        result = pop.loc[pop["Bird_ID"]==row["BirdID"]]["ID_P"]
+        result = pop.loc[pop["BirdID"]==row["BirdID"]]["IDPere"]
         if result.tolist() != []:
             if result.tolist()[0] == ".":
                 return -1
@@ -106,7 +103,7 @@ def get_father_id(row, pop):
         result = pop.loc[(pop["Ferme"] == row["Ferme"]) &
                          (pop["Batiment"] == row["Batiment"]) &
                          (pop["Cage"] == row["Cage"]) &
-                         (pop["Lot"] == row["Lot"])]["ID_P"]
+                         (pop["Lot"] == row["Lot"])]["IDPere"]
         # print(result.tolist())
         if len(set(result.tolist())) == 1:
             return result.tolist()[0]
@@ -114,9 +111,12 @@ def get_father_id(row, pop):
             result = pop.loc[(pop["Ferme"] == row["Ferme"]) &
                          (pop["Batiment"] == row["Batiment"]) &
                          (pop["Cage"] == row["Cage"]) &
-                         (pop["Lot"] == 2013.1)]["ID_P"]
+                         (pop["Lot"] == "2013.1")]["IDPere"]
             if len(set(result.tolist())) == 1:
-                return result.tolist()[0]
+                if result.tolist()[0] == ".":
+                    return -1
+                else:
+                    return result.tolist()[0]
             else:
                 return -1
         else:
